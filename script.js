@@ -1,56 +1,74 @@
-// Initialize AOS Animations
-AOS.init({
-    duration: 800,
-    once: true,
-    easing: 'ease-out'
+AOS.init({ duration: 1000, once: true });
+
+// 1. Theme Logic
+const themes = ['dark', 'light', 'neon'];
+let currentThemeIndex = 0;
+const themeToggle = document.getElementById('theme-toggle');
+const themeIcon = document.getElementById('theme-icon');
+
+themeToggle.addEventListener('click', () => {
+    currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+    const newTheme = themes[currentThemeIndex];
+    document.documentElement.setAttribute('data-theme', newTheme);
+    themeIcon.className = newTheme === 'dark' ? 'fas fa-moon' : (newTheme === 'light' ? 'fas fa-sun' : 'fas fa-bolt');
 });
 
-// Project Data
+// 2. Mobile Menu Logic
+const mobileBtn = document.getElementById('mobile-btn');
+const closeBtn = document.getElementById('close-mobile');
+const drawer = document.getElementById('mobile-drawer');
+
+mobileBtn.addEventListener('click', () => drawer.classList.add('mobile-menu-active'));
+closeBtn.addEventListener('click', () => drawer.classList.remove('mobile-menu-active'));
+document.querySelectorAll('.mobile-link').forEach(link => {
+    link.addEventListener('click', () => drawer.classList.remove('mobile-menu-active'));
+});
+
+// 3. Project Data
 const projects = [
-    {
-        title: "E-Commerce Experience",
-        tech: "MERN + Stripe",
-        description: "Full-featured shopping experience with secure checkout.",
-        link: "#",
-        delay: 0
-    },
-    {
-        title: "Real-time Chat App",
-        tech: "Socket.io + React",
-        description: "Instant messaging with global room connectivity.",
-        link: "#",
-        delay: 100
-    },
-    {
-        title: "Developer Network",
-        tech: "Express & MongoDB",
-        description: "A social platform for developers to share portfolios.",
-        link: "#",
-        delay: 200
-    }
+    { title: "API Hub (First API)", tech: "Fetch/CSS", url: "https://golamazamgm.github.io/B9A6-solve/", desc: "API data rendering solve." },
+    { title: "DOM Logic (First JS)", tech: "JS Core", url: "https://golamazamgm.github.io/B9A5-solve/", desc: "Vanilla JS interaction solve." },
+    { title: "Tailwind UI (Assn 3)", tech: "Tailwind", url: "https://golamazamgm.github.io/assignment3/", desc: "Responsive utility-first design." },
+    { title: "Core Web (Assn 2)", tech: "HTML/CSS", url: "https://golamazamgm.github.io/assignment2/", desc: "Structural web fundamentals." }
 ];
 
-const projectGrid = document.getElementById('project-grid');
+// 4. Showcase Logic
+const projectList = document.getElementById('project-list');
+const iframe = document.getElementById('project-iframe');
+const browserUrl = document.getElementById('browser-url');
+const loader = document.getElementById('loader');
+const newTabBtn = document.getElementById('new-tab-btn');
 
-function displayProjects() {
-    projectGrid.innerHTML = projects.map(project => `
-        <div class="group bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2" 
-             data-aos="fade-up" 
-             data-aos-delay="${project.delay}">
-            <div class="h-52 bg-indigo-50 flex items-center justify-center relative overflow-hidden">
-                <i class="fas fa-laptop-code text-5xl text-indigo-200 group-hover:scale-125 group-hover:text-indigo-400 transition-all duration-700"></i>
-                <div class="absolute inset-0 bg-indigo-600/0 group-hover:bg-indigo-600/10 transition-colors"></div>
-            </div>
-            <div class="p-8">
-                <span class="text-xs font-bold text-indigo-500 uppercase tracking-widest bg-indigo-50 px-3 py-1 rounded-full">${project.tech}</span>
-                <h3 class="text-xl font-bold mt-4 mb-3 text-gray-800">${project.title}</h3>
-                <p class="text-gray-600 text-sm leading-relaxed mb-6">${project.description}</p>
-                <a href="${project.link}" class="inline-flex items-center gap-2 font-bold text-indigo-600 hover:gap-4 transition-all">
-                    View Project <i class="fas fa-chevron-right text-xs"></i>
-                </a>
-            </div>
-        </div>
+function renderShowcase() {
+    projectList.innerHTML = projects.map((p, i) => `
+        <button class="project-tab w-full glass p-6 rounded-2xl text-left border-l-4 border-transparent hover:border-[var(--color-primary)] transition-all group" data-url="${p.url}">
+            <h3 class="font-black group-hover:neon-text transition text-sm">${p.title}</h3>
+            <p class="text-[10px] opacity-50 mt-1">${p.desc}</p>
+        </button>
     `).join('');
+
+    const tabs = document.querySelectorAll('.project-tab');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => loadProject(tab.getAttribute('data-url'), tab));
+    });
+
+    loadProject(projects[0].url, tabs[0]);
 }
 
-displayProjects();
+function loadProject(url, activeTab) {
+    loader.style.display = 'flex';
+    iframe.style.opacity = '0';
+    iframe.src = url;
+    browserUrl.textContent = url;
+    newTabBtn.href = url;
+
+    document.querySelectorAll('.project-tab').forEach(t => t.classList.remove('border-[var(--color-primary)]', 'bg-[var(--color-primary)]/10'));
+    activeTab.classList.add('border-[var(--color-primary)]', 'bg-[var(--color-primary)]/10');
+}
+
+iframe.onload = () => {
+    loader.style.display = 'none';
+    iframe.style.opacity = '1';
+};
+
+renderShowcase();
