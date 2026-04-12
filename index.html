@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,15 +9,6 @@
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <style>
         :root {
-            --color-primary: #6366f1;
-            --color-accent: #00f2fe;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --input-bg: rgba(255, 255, 255, 0.05);
-            --input-border: rgba(255, 255, 255, 0.1);
-            --bg-gradient: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%);
-        }
-        [data-theme="light"] {
             --color-primary: #4f46e5;
             --color-accent: #0ea5e9;
             --text-main: #1e293b;
@@ -25,6 +16,21 @@
             --input-bg: #f1f5f9;
             --input-border: #cbd5e1;
             --bg-gradient: radial-gradient(at 0% 0%, hsla(210,100%,95%,1) 0, transparent 50%), radial-gradient(at 50% 0%, hsla(190,100%,90%,1) 0, transparent 50%);
+            --mobile-bg: #ffffff;
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(0, 0, 0, 0.08);
+        }
+        [data-theme="dark"] {
+            --color-primary: #6366f1;
+            --color-accent: #00f2fe;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --input-bg: rgba(255, 255, 255, 0.05);
+            --input-border: rgba(255, 255, 255, 0.1);
+            --bg-gradient: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%);
+            --mobile-bg: #0d1117;
+            --glass-bg: rgba(15, 23, 42, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.1);
         }
         [data-theme="neon"] {
             --color-primary: #ff0055;
@@ -34,31 +40,60 @@
             --input-bg: rgba(0, 0, 0, 0.3);
             --input-border: #ff0055;
             --bg-gradient: radial-gradient(at 0% 0%, #1a0033 0, transparent 50%), radial-gradient(at 50% 0%, #000033 0, transparent 50%);
+            --mobile-bg: #000000;
+            --glass-bg: rgba(0, 0, 0, 0.7);
+            --glass-border: #ff0055;
         }
 
         body { 
             background: var(--bg-gradient);
-            background-color: #0d1117;
+            background-color: var(--mobile-bg);
             color: var(--text-main);
-            transition: all 0.4s ease;
+            transition: background-color 0.4s ease, color 0.4s ease;
             min-height: 100vh;
         }
-        [data-theme="light"] body { background-color: #f8fafc; }
 
         .neon-text {
             background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+
         .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
         }
-        [data-theme="light"] .glass {
-            background: rgba(255, 255, 255, 0.8);
-            border: 1px solid rgba(0, 0, 0, 0.1);
+
+        /* FIXED: Mobile Drawer Clarity (Removed backdrop-blur from overlay) */
+        #mobile-drawer {
+            background-color: var(--mobile-bg);
+            color: var(--text-main);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.2);
         }
+
+        #mobile-overlay {
+            background: rgba(0,0,0,0.4); /* Pure dimming, no blur to keep it sharp */
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .mobile-menu-active #mobile-drawer { transform: translateX(0); }
+        .mobile-menu-active #mobile-overlay { opacity: 1; pointer-events: auto; }
+        .mobile-menu-active { overflow: hidden; }
+
+        .mobile-link {
+            color: var(--text-main);
+            font-size: 1.5rem;
+            font-weight: 900;
+            padding: 1.25rem 0;
+            border-bottom: 1px solid var(--input-border);
+            display: block;
+            letter-spacing: -0.02em;
+        }
+
         .profile-float { animation: float 6s ease-in-out infinite; }
         @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-15px); } }
 
@@ -67,138 +102,148 @@
             border: 1px solid var(--input-border);
             color: var(--text-main);
         }
-        .themed-input::placeholder { color: var(--text-muted); opacity: 0.7; }
-        .mobile-menu-active { transform: translateX(0) !important; }
     </style>
 </head>
 <body class="font-sans overflow-x-hidden">
 
-    <nav class="fixed w-full z-50 glass shadow-xl">
-        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-            <span class="text-3xl font-black neon-text tracking-tighter">G.AZAM</span>
-            <div class="flex items-center gap-6">
-                <div class="hidden md:flex space-x-8 font-bold text-xs uppercase tracking-widest">
+    <div id="mobile-overlay" class="fixed inset-0 z-[55]"></div>
+
+    <nav class="fixed w-full z-50 glass">
+        <div class="max-w-7xl mx-auto px-5 py-4 flex justify-between items-center">
+            <span class="text-2xl font-black neon-text tracking-tighter">G.AZAM</span>
+            
+            <div class="flex items-center gap-3">
+                <div class="hidden md:flex space-x-8 font-bold text-xs uppercase tracking-widest mr-4">
                     <a href="#home" class="hover:text-[var(--color-primary)] transition">Home</a>
                     <a href="#tools" class="hover:text-[var(--color-primary)] transition">Tools</a>
                     <a href="#projects" class="hover:text-[var(--color-primary)] transition">Projects</a>
                     <a href="#contact" class="hover:text-[var(--color-primary)] transition">Contact</a>
                 </div>
-                <button id="theme-toggle" class="w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 transition border border-white/10">
-                    <i id="theme-icon" class="fas fa-moon"></i>
+
+                <button id="theme-toggle" class="w-10 h-10 rounded-full flex items-center justify-center bg-black/5 dark:bg-white/10 hover:bg-black/10 transition border border-black/5">
+                    <i id="theme-icon" class="fas fa-sun"></i>
                 </button>
-                <button id="mobile-btn" class="md:hidden text-2xl"><i class="fas fa-bars"></i></button>
+
+                <button id="mobile-btn" class="md:hidden w-10 h-10 flex items-center justify-center text-xl">
+                    <i class="fas fa-bars"></i>
+                </button>
             </div>
         </div>
 
-        <div id="mobile-drawer" class="fixed top-0 right-0 h-screen w-64 bg-[#0d1117] [data-theme='light']:bg-white translate-x-full transition-transform duration-300 z-[60] p-10 shadow-2xl md:hidden">
-            <button id="close-mobile" class="absolute top-5 right-5 text-2xl"><i class="fas fa-times"></i></button>
-            <div class="flex flex-col gap-8 mt-10 font-bold uppercase tracking-widest text-sm">
+        <div id="mobile-drawer" class="fixed top-0 right-0 h-screen w-[85%] max-w-sm translate-x-full z-[60] p-10 flex flex-col">
+            <div class="flex justify-between items-center mb-12">
+                <span class="font-black text-2xl tracking-tighter neon-text">G.AZAM</span>
+                <button id="close-mobile" class="text-3xl"><i class="fas fa-times"></i></button>
+            </div>
+            <nav class="flex flex-col">
                 <a href="#home" class="mobile-link">Home</a>
                 <a href="#tools" class="mobile-link">Tools</a>
                 <a href="#projects" class="mobile-link">Projects</a>
                 <a href="#contact" class="mobile-link">Contact</a>
+            </nav>
+            <div class="mt-auto pb-4 flex gap-6 text-2xl opacity-50">
+                <a href="https://github.com/golamazamgm"><i class="fab fa-github"></i></a>
+                <a href="https://wa.me/8801746684838"><i class="fab fa-whatsapp"></i></a>
             </div>
         </div>
     </nav>
 
-    <section id="home" class="pt-48 pb-12 px-6 relative">
+    <section id="home" class="pt-36 md:pt-48 pb-12 px-6">
         <div class="max-w-5xl mx-auto text-center flex flex-col items-center">
-            <div class="profile-float mb-12" data-aos="zoom-in">
-                <div class="w-48 h-48 md:w-56 md:h-56 rounded-full p-1.5 bg-gradient-to-tr from-[var(--color-primary)] to-[var(--color-accent)] shadow-2xl">
-                    <img src="images/IMG_20251201_144452.jpg" alt="Golam Azam" class="w-full h-full object-cover rounded-full border-4 [data-theme='light']:border-white border-gray-900">
+            <div class="profile-float mb-10" data-aos="zoom-in">
+                <div class="w-44 h-44 md:w-56 md:h-56 rounded-full p-1.5 bg-gradient-to-tr from-[var(--color-primary)] to-[var(--color-accent)] shadow-2xl">
+                    <img src="images/IMG_20251201_144452.jpg" alt="Golam Azam" class="w-full h-full object-cover rounded-full border-4 border-white dark:border-gray-900">
                 </div>
             </div>
-            <h1 class="text-6xl md:text-8xl font-black mb-6 tracking-tighter" data-aos="fade-up">
-                Software <span class="neon-text">Architect.</span>
+            <p class="font-mono font-bold lg:mt-5 text-[10px] md:text-sm tracking-[0.4em] uppercase opacity-60 mb-4" data-aos="fade-up">Hi there...</p>
+            <h1 class="text-5xl sm:text-6xl md:text-8xl font-black mb-6 tracking-tighter" data-aos="fade-up">
+                I'm <span class="neon-text">Golam Azam.</span>
             </h1>
-            <p style="color: var(--text-muted)" class="text-xl md:text-2xl mb-12 max-w-3xl leading-relaxed" data-aos="fade-up">
-                CSE Student at Mymensingh Engineering College. Mastering the MERN Stack and refining global communication through IELTS.
+            <p style="color: var(--text-muted)" class="text-lg md:text-2xl mb-10 max-w-3xl leading-relaxed" data-aos="fade-up" data-aos-delay="100">
+                Transforming ideas into reality with the MERN stack and powering them with cutting-edge AI automation.
             </p>
         </div>
     </section>
 
-    <section id="tools" class="py-24 px-6">
+    <section id="tools" class="py-20 px-6">
         <div class="max-w-6xl mx-auto">
-            <h2 class="text-4xl font-black mb-12 text-center tracking-tighter">My Technical <span class="neon-text">Toolbox.</span></h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                <div class="glass p-6 rounded-2xl text-center group hover:border-[var(--color-primary)] transition" data-aos="fade-up">
-                    <i class="fas fa-code text-3xl mb-4 text-[var(--color-primary)] group-hover:scale-110 transition"></i>
-                    <p class="font-bold text-xs uppercase tracking-widest">VS Code</p>
+            <h2 class="text-3xl md:text-4xl font-black mb-12 text-center tracking-tighter">Technical <span class="neon-text">Toolbox.</span></h2>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <div class="glass p-6 rounded-2xl text-center hover:scale-105 transition duration-300" data-aos="fade-up">
+                    <i class="fas fa-code text-2xl mb-3 text-[var(--color-primary)]"></i>
+                    <p class="font-bold text-[10px] uppercase">VS Code</p>
                 </div>
-                <div class="glass p-6 rounded-2xl text-center group hover:border-[var(--color-primary)] transition" data-aos="fade-up" data-aos-delay="50">
-                    <i class="fab fa-github text-3xl mb-4 group-hover:scale-110 transition"></i>
-                    <p class="font-bold text-xs uppercase tracking-widest">GitHub</p>
+                <div class="glass p-6 rounded-2xl text-center hover:scale-105 transition duration-300" data-aos="fade-up" data-aos-delay="50">
+                    <i class="fab fa-github text-2xl mb-3"></i>
+                    <p class="font-bold text-[10px] uppercase">GitHub</p>
                 </div>
-                <div class="glass p-6 rounded-2xl text-center group hover:border-[var(--color-primary)] transition" data-aos="fade-up" data-aos-delay="100">
-                    <i class="fab fa-react text-3xl mb-4 text-cyan-400 group-hover:scale-110 transition"></i>
-                    <p class="font-bold text-xs uppercase tracking-widest">React</p>
+                <div class="glass p-6 rounded-2xl text-center hover:scale-105 transition duration-300" data-aos="fade-up" data-aos-delay="100">
+                    <i class="fab fa-react text-2xl mb-3 text-cyan-500"></i>
+                    <p class="font-bold text-[10px] uppercase">React</p>
                 </div>
-                <div class="glass p-6 rounded-2xl text-center group hover:border-[var(--color-primary)] transition" data-aos="fade-up" data-aos-delay="150">
-                    <i class="fab fa-node-js text-3xl mb-4 text-green-500 group-hover:scale-110 transition"></i>
-                    <p class="font-bold text-xs uppercase tracking-widest">Node.js</p>
+                <div class="glass p-6 rounded-2xl text-center hover:scale-105 transition duration-300" data-aos="fade-up" data-aos-delay="150">
+                    <i class="fab fa-node-js text-2xl mb-3 text-green-600"></i>
+                    <p class="font-bold text-[10px] uppercase">Node.js</p>
                 </div>
-                <div class="glass p-6 rounded-2xl text-center group hover:border-[var(--color-primary)] transition" data-aos="fade-up" data-aos-delay="200">
-                    <i class="fas fa-wind text-3xl mb-4 text-sky-400 group-hover:scale-110 transition"></i>
-                    <p class="font-bold text-xs uppercase tracking-widest">Tailwind</p>
+                <div class="glass p-6 rounded-2xl text-center hover:scale-105 transition duration-300" data-aos="fade-up" data-aos-delay="200">
+                    <i class="fas fa-wind text-2xl mb-3 text-sky-400"></i>
+                    <p class="font-bold text-[10px] uppercase">Tailwind</p>
                 </div>
-                <div class="glass p-6 rounded-2xl text-center group hover:border-[var(--color-primary)] transition" data-aos="fade-up" data-aos-delay="250">
-                    <i class="fab fa-figma text-3xl mb-4 text-orange-500 group-hover:scale-110 transition"></i>
-                    <p class="font-bold text-xs uppercase tracking-widest">Figma</p>
+                <div class="glass p-6 rounded-2xl text-center hover:scale-105 transition duration-300" data-aos="fade-up" data-aos-delay="250">
+                    <i class="fab fa-figma text-2xl mb-3 text-orange-500"></i>
+                    <p class="font-bold text-[10px] uppercase">Figma</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <section id="projects" class="py-24 px-6">
+    <section id="projects" class="py-20 px-4 md:px-6">
         <div class="max-w-7xl mx-auto">
-            <h2 class="text-5xl font-black tracking-tighter mb-16 text-center">Live <span class="neon-text">Showcase.</span></h2>
-            <div class="grid lg:grid-cols-[300px,1fr] gap-10">
-                <div id="project-list" class="space-y-4"></div>
-                <div class="glass p-2 rounded-2xl border border-white/10 shadow-3xl relative overflow-hidden" data-aos="fade-left">
-                    <div class="bg-black/40 px-4 py-3 flex items-center justify-between border-b border-white/5">
-                        <div class="flex items-center gap-4">
-                            <div class="flex gap-1.5"><span class="w-3 h-3 bg-red-500 rounded-full"></span><span class="w-3 h-3 bg-yellow-500 rounded-full"></span><span class="w-3 h-3 bg-green-500 rounded-full"></span></div>
-                            <div id="browser-url" class="text-[10px] opacity-40 font-mono hidden md:block truncate max-w-xs">loading...</div>
+            <h2 class="text-4xl md:text-5xl font-black tracking-tighter mb-16 text-center">Live <span class="neon-text">Showcase.</span></h2>
+            <div class="grid lg:grid-cols-[300px,1fr] gap-8">
+                <div id="project-list" class="space-y-3"></div>
+                <div class="glass p-1 md:p-2 rounded-2xl relative overflow-hidden shadow-2xl" data-aos="fade-left">
+                    <div class="bg-black/5 dark:bg-black/40 px-3 py-3 flex items-center justify-between border-b border-black/5">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 bg-red-500 rounded-full"></span><span class="w-2 h-2 bg-yellow-500 rounded-full"></span><span class="w-2 h-2 bg-green-500 rounded-full"></span>
                         </div>
-                        <a id="new-tab-btn" href="#" target="_blank" class="text-[10px] font-bold flex items-center gap-2 hover:text-[var(--color-primary)] transition px-3 py-1 bg-white/5 rounded-lg border border-white/5">
-                            OPEN IN NEW TAB <i class="fas fa-external-link-alt"></i>
-                        </a>
+                        <div id="browser-url" class="text-[9px] opacity-40 font-mono hidden sm:block truncate max-w-[200px]">loading...</div>
+                        <a id="new-tab-btn" href="#" target="_blank" class="text-[9px] font-bold px-2 py-1 bg-black/5 rounded hover:text-[var(--color-primary)] transition">OPEN</a>
                     </div>
-                    <div class="aspect-video relative bg-gray-950">
+                    <div class="aspect-video relative bg-white dark:bg-gray-950">
                         <iframe id="project-iframe" src="about:blank" class="w-full h-full border-0 opacity-0 transition-opacity duration-700"></iframe>
-                        <div id="loader" class="absolute inset-0 flex items-center justify-center bg-gray-950"><i class="fas fa-spinner fa-spin text-3xl neon-text"></i></div>
+                        <div id="loader" class="absolute inset-0 flex items-center justify-center"><i class="fas fa-spinner fa-spin text-2xl neon-text"></i></div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <section id="contact" class="py-24 px-6">
+    <section id="contact" class="py-20 px-6">
         <div class="max-w-6xl mx-auto">
-            <div class="grid lg:grid-cols-2 gap-16">
+            <div class="grid lg:grid-cols-2 gap-12">
                 <div data-aos="fade-right">
-                    <h2 class="text-5xl font-black mb-8 tracking-tighter">Get In <span class="neon-text">Touch.</span></h2>
-                    <p style="color: var(--text-muted)" class="text-lg mb-12">Based in Joypurhat, Bangladesh. Open to remote roles and MERN stack collaborations.</p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <a href="mailto:glmajom@gmail.com" class="glass p-6 rounded-2xl hover:border-[var(--color-primary)] transition">
-                            <i class="fas fa-envelope text-[var(--color-primary)] mb-2 text-xl"></i>
-                            <p class="font-bold truncate text-sm">glmajom@gmail.com</p>
+                    <h2 class="text-4xl font-black mb-6 tracking-tighter">Let's <span class="neon-text">Connect.</span></h2>
+                    <p class="opacity-70 mb-8">Open for MERN stack collaborations and remote opportunities.</p>
+                    <div class="space-y-4">
+                        <a href="mailto:glmajom@gmail.com" class="glass p-5 rounded-xl flex items-center gap-4 hover:border-[var(--color-primary)] transition">
+                            <i class="fas fa-envelope text-[var(--color-primary)]"></i>
+                            <span class="font-bold text-sm">glmajom@gmail.com</span>
                         </a>
-                        <a href="https://wa.me/8801746684838" class="glass p-6 rounded-2xl hover:border-green-500 transition">
-                            <i class="fab fa-whatsapp text-green-500 mb-2 text-xl"></i>
-                            <p class="font-bold text-sm">+8801746684838</p>
+                        <a href="https://wa.me/8801746684838" class="glass p-5 rounded-xl flex items-center gap-4 hover:border-green-500 transition">
+                            <i class="fab fa-whatsapp text-green-500"></i>
+                            <span class="font-bold text-sm">+8801746684838</span>
                         </a>
                     </div>
                 </div>
-
-                <div class="glass p-10 rounded-3xl" data-aos="fade-left">
-                    <form action="https://formspree.io/f/mqegrjrl" method="POST" class="space-y-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <input type="text" name="name" required placeholder="Name" class="themed-input w-full p-4 rounded-xl outline-none focus:ring-2 ring-[var(--color-primary)] transition shadow-inner">
-                            <input type="email" name="email" required placeholder="Email" class="themed-input w-full p-4 rounded-xl outline-none focus:ring-2 ring-[var(--color-primary)] transition shadow-inner">
+                <div class="glass p-8 rounded-3xl" data-aos="fade-left">
+                    <form action="https://formspree.io/f/mqegrjrl" method="POST" class="space-y-4">
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <input type="text" name="name" required placeholder="Name" class="themed-input w-full p-4 rounded-xl outline-none text-sm">
+                            <input type="email" name="email" required placeholder="Email" class="themed-input w-full p-4 rounded-xl outline-none text-sm">
                         </div>
-                        <textarea name="message" rows="4" required placeholder="How can I help you?" class="themed-input w-full p-4 rounded-xl outline-none focus:ring-2 ring-[var(--color-primary)] transition shadow-inner"></textarea>
-                        <button type="submit" class="w-full py-5 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] text-white font-black rounded-xl shadow-lg hover:scale-[1.02] transition duration-300">
+                        <textarea name="message" rows="4" required placeholder="Your message..." class="themed-input w-full p-4 rounded-xl outline-none text-sm"></textarea>
+                        <button type="submit" class="w-full py-4 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] text-white font-black rounded-xl hover:scale-[1.01] transition text-sm">
                             SEND MESSAGE
                         </button>
                     </form>
@@ -207,20 +252,24 @@
         </div>
     </section>
 
-    <footer class="py-20 glass border-t-0 mt-20">
-        <div class="max-w-7xl mx-auto px-6 text-center">
-            <div class="flex flex-wrap justify-center gap-8 mb-12">
-                <a href="https://github.com/golamazamgm" target="_blank" class="text-2xl hover:text-[var(--color-primary)] transition"><i class="fab fa-github"></i></a>
-                <a href="https://www.linkedin.com/in/golam-azamgm/" target="_blank" class="text-2xl hover:text-blue-600 transition"><i class="fab fa-linkedin"></i></a>
-                <a href="https://www.facebook.com/golamazamgm" target="_blank" class="text-2xl hover:text-blue-500 transition"><i class="fab fa-facebook"></i></a>
-                <a href="https://www.instagram.com/golam_azamgm/" target="_blank" class="text-2xl hover:text-pink-500 transition"><i class="fab fa-instagram"></i></a>
-                <a href="https://wa.me/8801746684838" target="_blank" class="text-2xl hover:text-green-500 transition"><i class="fab fa-whatsapp"></i></a>
-            </div>
-            <p class="font-mono text-[10px] uppercase tracking-[0.5em] opacity-40">
-                &copy; 2026 GOLAM AZAM // JOYPURHAT // MYMENSINGH ENGINEERING COLLEGE
-            </p>
+   <footer class="py-12 glass border-t-0 mt-20">
+    <div class="max-w-7xl mx-auto px-6 text-center">
+        <div class="flex flex-wrap justify-center gap-6 mb-8">
+            <a href="https://www.facebook.com/golamazamgm" class="text-xl hover:text-blue-700"><i class="fab fa-facebook"></i></a>
+            
+            <a href="https://www.instagram.com/golam_azamgm/" class="text-xl hover:text-pink-500"><i class="fab fa-instagram"></i></a>
+            
+            <a href="https://github.com/golamazamgm" class="text-xl hover:text-[var(--color-primary)]"><i class="fab fa-github"></i></a>
+            
+            <a href="https://www.linkedin.com/in/golam-azamgm/" class="text-xl hover:text-blue-600"><i class="fab fa-linkedin"></i></a>
+            
+            <a href="https://wa.me/8801746684838" class="text-xl hover:text-green-500"><i class="fab fa-whatsapp"></i></a>
         </div>
-    </footer>
+        <p class="text-[14px] uppercase tracking-widest opacity-40 font-mono">
+            &copy; 2026 GOLAM AZAM // MEC // BANGLADESH
+        </p>
+    </div>
+</footer>
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="script.js"></script>
